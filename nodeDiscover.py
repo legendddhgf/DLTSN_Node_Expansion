@@ -5,6 +5,17 @@ import paho.mqtt.publish as publish
 import threading
 import time
 import argparse
+from mate_interface import Mate3
+
+def cut_zeros_and_non_digits(x):
+    str = ""
+    if type(x) != type(str):
+        print "cut_zeros() accepts only strings"
+        exit()
+    for i in range(0, len(x)):
+        if ord(x[i]) > 48 and ord(x[i]) < 58:
+            str += x[i]
+    return str
 
 BROKER_NAME = "127.0.0.1"
 # BROKER_NAME = "128.114.63.86"
@@ -66,10 +77,10 @@ def on_message_state1(client1, obj, msg):
     # Make an empty dictionary entry for the received message
     # mapping the mac address of an xbee to a dictionary.
     if msg.payload != "END":
-    	nodeList[msg.payload] = None
+        nodeList[msg.payload] = None
     else:
-    	print "Ending State 1 of Node Discovery"
-    	State = 2
+        print "Ending State 1 of Node Discovery"
+        State = 2
         # client1.loop_stop(force=False)
 
 def state1():
@@ -83,9 +94,9 @@ def state1():
         clientstr = "xbeeNodeDiscoverS1"
     elif device == 'Mate3':
         clientstr = "mate3NodeDiscovers1"
-    else:
-        print "Invalid device specified: %s" % device
-        exit()
+    # else:
+        # print "Invalid device specified: %s" % device
+        # exit()
     client1 = mqtt.Client(clientstr)
     client1.on_message = on_message_state1
     
@@ -222,7 +233,11 @@ def main():
         clientstr = "xbeeNodeDiscover"
     elif device == 'Mate3':
         clientstr = "mate3NodeDiscover"
-        publish.single("testbed/gateway/mqtt/" + MacAddr, GET_TYPE, hostname=BROKER_NAME)
+        mate3 = Mate3()
+        mate3.usb_init()
+        SerNo = int(cut_zeros_and_non_digits(mate3.get_serial_number()))
+        #print "We think serial number is:", SerNo
+        publish.single("testbed/gateway/mqtt/" + str(SerNo), 'Located device', hostname=BROKER_NAME)
         exit()
 
     SEND_ND = 0
