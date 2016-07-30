@@ -7,13 +7,13 @@ import time
 import argparse
 from mate_interface import Mate3
 
-def cut_zeros_and_non_digits(x):
+def cut_non_digits(x):
     str = ""
     if type(x) != type(str):
         print "cut_zeros() accepts only strings"
         exit()
     for i in range(0, len(x)):
-        if ord(x[i]) > 48 and ord(x[i]) < 58:
+        if ord(x[i]) > 47 and ord(x[i]) < 58:
             str += x[i]
     return str
 
@@ -217,6 +217,47 @@ def on_message(client, obj, msg):
 def on_connect(client,obj,msg):
     pass
 
+def mate3_on_message(client,obj,msg):
+    print "Command received by nodeDiscover Client"
+    if msg.payload != "START":
+        return
+    print "Starting Mate3 node discovery..."
+    mate3 = Mate3()
+    mate3.usb_init()
+    SerNo = cut_non_digits(mate3.get_serial_number())
+    sendstr = 'PORT_ADDR=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'DEV_TYPE=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'INV_CUR=2'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'CHG_CUR=2'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'BUY_CUR=2'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'SELL_CUR=2'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'GRID_IN_VOLT=2'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'GEN_IN_VOLT=2'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'OUT_VOLT=2'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'INV_OP_MODE=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'ERROR_CODE=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'AC_MODE=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'BATT_VOLT=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'MISC=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'WARN_CODE=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    print "Mate3 node discovery complete"
+    exit()
+
 def main():
     print "\n--IN MAIN--\n"
     # Set/reset all variables and states
@@ -232,13 +273,13 @@ def main():
     if device == 'Atmega2560':
         clientstr = "xbeeNodeDiscover"
     elif device == 'Mate3':
-        clientstr = "mate3NodeDiscover"
-        mate3 = Mate3()
-        mate3.usb_init()
-        SerNo = int(cut_zeros_and_non_digits(mate3.get_serial_number()))
-        #print "We think serial number is:", SerNo
-        publish.single("testbed/gateway/mqtt/" + str(SerNo), 'Located device', hostname=BROKER_NAME)
-        exit()
+        client = mqtt.Client(clientstr)
+        client.on_message = mate3_on_message
+        client.on_connect = on_connect
+        client.connect(BROKER_NAME, 1883)
+        client.subscribe("testbed/nodeDiscover/command/mate3/", 0)
+        client.loop_forever()
+        return
 
     SEND_ND = 0
     state2Counter = 0
@@ -250,10 +291,7 @@ def main():
     client.on_connect = on_connect
     client.connect(BROKER_NAME, 1883)
     client.subscribe("testbed/nodeDiscover/command/", 0)
-    if not single_run:
-        client.loop_forever()
-    else:
-        client.loop() # if single run specified, then we need to only loop once
+    client.loop_forever()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse options for running nodeDiscover')
@@ -262,13 +300,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     global single_run
     global device
-    device = 'Atmeg2560'
+    device = 'Atmega2560'
+    single_run = False
+    '''
     if args.single_run == 'yes':
         single_run = True
         print "single_run=%r" % single_run
     else:
         single_run = False
         print "single_run=%r" % single_run
+    '''
     if args.device == None:
         print 'device=Atmega2560'
     else:
