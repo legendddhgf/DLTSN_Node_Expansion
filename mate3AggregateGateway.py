@@ -11,16 +11,15 @@ import paho.mqtt.publish as publish
 import threading
 from multiprocessing import Process
 import binascii
+from mate_interface import Mate3
 # -----------------------------------------------------------------------------
 # Config Settings
 BROKER_NAME = "127.0.0.1"
 # Config Settings
 # -----------------------------------------------------------------------------
 
-mate3 = Mate3()
-
 # Must be used with .encode('hex'); omitted in these functions for readability
-# TODO:
+# TODO: do we even need this?
 def SertoHex(response, param):
     return response[param][2:10]
 def addrToHex(response, param):
@@ -98,8 +97,20 @@ def rxData():
             print "an error occured in rxData"
 """
 
+# return list with:
+#0: 1 if query, 2 if command, 0 if invalid
+#1: index of next character
+def msg_type(msg):
+    for i in range(0, len(msg)):
+        if msg[i] == '?':
+            return [1, i + 1]
+        if msg[i] == '=':
+            return [2, i + 1]
+    return [0, 0]
+
 def on_message(mqttc, obj, msg):
     try:
+        global mate3
         print "MQTT MESSAGE RECEIVED"
         # If the received message is a node discover command, send an AT command.
         # If not, it is a data message, and forward it to the xbee.
@@ -120,20 +131,39 @@ def on_message(mqttc, obj, msg):
             payload = binascii.unhexlify(conv)
 
         print "DATA SENT IS:" + payload
-        payload = payload.split('\r')[0]
+        #payload = payload.split('\r')[0]
+        
+        msg_ti = msg_type(payload)
+        val_index = payload[msg_ti[1]]
         # get the packet from mate and respond with the appropriate piece of info
         # TODO: figure out what kind of topic structures we need to send to
-        print "SENT"
+        if msg_ti[0] == 1:
+            print "Attempting to get packet from mate"
+            info = mate3.getPacket()
+            print "SWAGGER"
+            if ord(val_index) < 58 and ord(val_index) > 47:
+                publishstr = ""
+                for i in range(0, val_index + 1): # including the index of the number
+                    publishstr += payload[i]
+                publishstr += info[payload.split(val_index)[0]][ord(val_index) - 48]
+                publish.single("testbed/gateway/data/" + SerNo, publishstr)
+                print "Publishing: ", publishstr
+                print "SENT"
+        elif msg_ti[0] == 2:
+            print "Not yet ready for commands"
+        else:
+            print "invalid message type"
+        time.sleep(1.1)
     except:
         print "An error occurred in on_message"
 
 def Data():
     # for specific client:
     # mqttc = mqtt.Client("client-id")
-    print "in txdata"
+    print "in Data"
     mqttc = mqtt.Client("mate3Gateway")
     mqttc.on_message = on_message
-    mqttc.connect(BROKER_NAME, 1883, 60)
+    mqttc.connect(BROKER_NAME, 1883)
     mqttc.subscribe("testbed/gateway/mqtt/mate3/#", 0)
     mqttc.loop_forever()
 
@@ -142,11 +172,15 @@ def Data():
 # txData transmits commands sent by a client.
 
 # rx side no unnecessary
-try:
-    Thread = threading.Thread(target=Data)
-    #rxThread = threading.Thread(target=rxData)
-    #rxThread.start()
-    Thread.start()
+#try:
+global mate3
+mate3 = Mate3()
+mate3.ser_init()
+#Thread = threading.Thread(target=Data)
+#rxThread = threading.Thread(target=rxData)
+#rxThread.start()
+#Thread.start()
+Data()
     
-except:
-    print "Problem starting a new thread"
+#except:
+print "Problem starting a new thread"

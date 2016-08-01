@@ -299,8 +299,8 @@ class Mate3:
         packet['CALC_CHKSM'] = []
         packet['CALC_CHKSM'].append(val)
 
-        print "The returned packet will be:"
-        print packet
+        #print "The returned packet will be:"
+        #print packet
         return packet
 
 
