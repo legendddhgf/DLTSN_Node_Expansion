@@ -83,6 +83,227 @@ class Mate3:
         #print "Giving serial number:", str
         return str
 
+    def getPacket(self):
+        x = []
+        while (self.ser.inWaiting() != 0): # flush first
+            self.ser.read()
+        sctime = 0.0 # time to get a single character
+        iptime = 0.0 # time between beginning and end of packet
+        bptime = 0.0 # time between end of packet and beginning of next
+        while (zero == 0):# infinite loop
+            temp = '\0'
+            if (sctime == 0):
+                sctime = time.time() # start counting
+                temp = self.ser.read()
+                sctime = time.time() - sctime # now has time for single character
+            else:
+                temp = self.ser.read()
+            if (ord(temp) == 13):
+                bptime = time.time() * (-1) # end of first packet
+                break # wait untill beginning of packet
+        while (zero == 0): # infinite loop
+            x.append(self.ser.read())
+            if (bptime < 0): # called after first byte is read
+                bptime += time.time() # one character after start of next packet
+                bptime -= sctime # subtract time for single character from previous value
+                if bptime < 0:
+                    bptime = 0
+                iptime = time.time() # start of the new packet neglecting a character
+            if (ord(x[len(x) - 1]) == 13):
+                iptime = time.time() - iptime + sctime # end of the same packet plus time of first character
+                break
+        for i in range(0, len(x)):
+            x[i] = ord(x[i])
+        #print "Our packet is:\n"
+        #print x
+
+        packet = {}
+    
+        chksum = 0  
+        desc = ""
+        #print "\nSize of packet: %d"  % (len(x))
+        val = (x[1] - 48) * 10 + (x[2] - 48)
+        chksum += (x[1] - 48) + (x[2] - 48)
+        #print "\nPort Address: %d" % (val)
+        packet['PORT_ADDR'] = []
+        packet['PORT_ADDR'].append(val)
+        val = x[4] - 48
+        chksum += x[4] - 48
+        #print "Device type: %d" % (val)
+        packet['DEV_TYPE'] = []
+        packet['DEV_TYPE'].append(val)
+        val = (x[6] - 48) * 10 + (x[7] - 48)
+        chksum += (x[6] - 48) + (x[7] - 48)
+        #print "L1 Inverter current: %d [A]" % (val)
+        packet['INV_CUR'] = []
+        packet['INV_CUR'].append(val)
+        val = (x[9] - 48) * 10 + (x[10] - 48)
+        chksum += (x[9] - 48) + (x[10] - 48)
+        #print "L1 Charger current: %d [A]" % (val)
+        packet['CHG_CUR'] = []
+        packet['CHG_CUR'].append(val)
+        val = (x[12] - 48) * 10 + (x[13] - 48)
+        chksum += (x[12] - 48) + (x[13] - 48)
+        #print "L1 Buy current: %d [A]" % (val)
+        packet['BUY_CUR'] = []
+        packet['BUY_CUR'].append(val)
+        val = (x[15] - 48) * 10 + (x[16] - 48)
+        chksum += (x[15] - 48) + (x[16] - 48)
+        #print "L1 Sell current: %d [A]" % (val)
+        packet['SELL_CUR'] = []
+        packet['SELL_CUR'].append(val)
+        val = (x[18] - 48) * 100 + (x[19] - 48) * 10 + (x[20] - 48)
+        chksum += (x[18] - 48) + (x[19] - 48) + (x[20] - 48)
+        #print "L1 Grid input voltage: %d [V]"  % (val)
+        packet['GRID_IN_VOLT'] = []
+        packet['GRID_IN_VOLT'].append(val)
+        val = (x[22] - 48) * 100 + (x[23] - 48) * 10 + (x[24] - 48)
+        chksum += (x[22] - 48) + (x[23] - 48) + (x[24] - 48)
+        #print "L1 Generator input voltage: %d [V]" % (val)
+        packet['GEN_IN_VOLT'] = []
+        packet['GEN_IN_VOLT'].append(val)
+        val = (x[26] - 48) * 100 + (x[27] - 48) * 10 + (x[28] - 48)
+        chksum += (x[26] - 48) + (x[27] - 48) + (x[28] - 48)
+        #print "L1 Output voltage: %d [V]" % (val)
+        packet['OUT_VOLT'] = []
+        packet['OUT_VOLT'].append(val)
+        val = (x[30] - 48) * 10 + (x[31] - 48)
+        chksum += (x[30] - 48) + (x[31] - 48)
+        #print "L2 Inverter current: %d [A]" % (val)
+        packet['INV_CUR'].append(val)
+        val = (x[33] - 48) * 10 + (x[34] - 48)
+        chksum += (x[33] - 48) + (x[34] - 48)
+        #print "L2 Charger current: %d [A]" % (val)
+        packet['CHG_CUR'].append(val)
+        val = (x[36] - 48) * 10 + (x[37] - 48)
+        chksum += (x[36] - 48) + (x[37] - 48)
+        #print "L2 Buy current: %d [A]" %  (val)
+        packet['BUY_CUR'].append(val)
+        val = (x[39] - 48) * 10 + (x[40] - 48)
+        chksum += (x[39] - 48) + (x[40] - 48)
+        #print "L2 Sell current: %d [A]" % (val)
+        packet['SELL_CUR'].append(val)
+        val = (x[42] - 48) * 100 + (x[43] - 48) * 10 + (x[44] - 48)
+        chksum += (x[42] - 48) + (x[43] - 48) + (x[44] - 48)
+        #print "L2 Grid input voltage: %d [V]" % (val)
+        packet['GRID_IN_VOLT'].append(val)
+        val = (x[46] - 48) * 100 + (x[47] - 48) * 10 + (x[48] - 48)
+        chksum += (x[46] - 48) + (x[47] - 48) + (x[48] - 48)
+        #print "L2 Generator input voltage: %d [V]" % (val)
+        packet['GEN_IN_VOLT'].append(val)
+        val = (x[50] - 48) * 100 + (x[51] - 48) * 10 + (x[52] - 48)
+        chksum += (x[50] - 48) + (x[51] - 48) + (x[52] - 48)
+        #print "L2 Output voltage: %d  [V]" % (val)
+        packet['OUT_VOLT'].append(val)
+        val = (x[54] - 48) * 10 + (x[55] - 48)
+        chksum += (x[54] - 48) + (x[55] - 48)
+        if val == 0:
+            desc = "Inverter Off"
+        elif val == 1:
+            desc = "Search"
+        elif val == 2:
+            desc = "Inverter On"
+        elif val == 3:
+            desc = "Charge"
+        elif val == 4:
+            desc = "Silent"
+        elif val == 5:
+            desc = "Float"
+        elif val == 6:
+            desc = "Equalize"
+        elif val == 7:
+            desc = "Charger Off"
+        elif val == 8:
+            desc = "Support"
+        elif val == 9:
+            desc = "Sell Enabled"
+        elif val == 10:
+            desc = "Slave Inverter On"
+        elif val == 11:
+            desc = "Slave Inverter Off"
+        elif val == 12:
+            desc = "Offset"
+        elif val == 14:
+            desc = "Offset"
+        elif val == 90:
+            desc = "Inverter Error"
+        elif val == 91:
+            desc = "AGS Error"
+        elif val == 92:
+            desc == "Comm Error"
+        else:
+            desc = "Undefined"
+        #print "Inverter operating mode: %d: %s" % (val, desc)
+        packet['INV_OP_MODE'] = []
+        packet['INV_OP_MODE'].append(val)
+        val = (x[57] - 48) * 100 + (x[58] - 48) * 10 + (x[59] - 48)
+        chksum += (x[57] - 48) + (x[58] - 48) + (x[59] - 48)
+        #print "Error code: %d" % (val)
+        packet['ERROR_CODE'] = []
+        packet['ERROR_CODE'].append(val)
+        #print "List of Errors (if empty then no errors):"
+        '''
+        if val & (1 << 0) != 0:
+            print "\tLow Vac Output"
+        if val & (1 << 1) != 0:
+            print "\tStacking Error"
+        if val & (1 << 2) != 0:
+            print "\tOver Temp"
+        if val & (1 << 3) != 0:
+            print "\tLow Battery"
+        if val & (1 << 4) != 0:
+            print "\tComm Fault"
+        if val & (1 << 5) != 0:
+            print "\tHigh Battery"
+        if val & (1 << 6) != 0:
+            print "\tShorted Output"
+        if val & (1 << 7) != 0:
+            print "\tBackfeed"
+        '''
+        #print "=========="
+        val = (x[61] - 48) * 10 + (x[62] - 48)
+        chksum += (x[61] - 48) + (x[62] - 48)
+        if val == 0:
+            desc = "No AC"
+        elif val == 1:
+            desc = "AC Drop"
+        elif val == 2:
+            desc = "AC Use"
+        else:
+            desc = "Undefined"
+        #print "AC mode: %d: %s" % (val, desc)
+        packet['AC_MODE'] = []
+        packet['AC_MODE'].append(val)
+        decval = 0.0
+        decval = (x[64] - 48) * 100 + (x[65] - 48) * 10 + (x[66] - 48)
+        decval /= 10
+        chksum += (x[64] - 48) + (x[65] - 48) + (x[66] - 48)
+        #print "Battery voltage: %.1f [V]" % (decval)
+        packet['BATT_VOLT'] = []
+        packet['BATT_VOLT'].append(decval * 10)
+        val = (x[68] - 48) * 100 + (x[69] - 48) * 10 + (x[70] - 48)
+        chksum += (x[68] - 48) + (x[69] - 48) + (x[70] - 48)
+        #print "Miscellaneous: %d" % (val)
+        packet['MISC'] = []
+        packet['MISC'].append(val)
+        val = (x[72] - 48) * 100 + (x[73] - 48) * 10 + (x[74] - 48)
+        chksum += (x[72] - 48) + (x[73] - 48) + (x[74] - 48)
+        #print "Warning codes: %d" % (val)
+        packet['WARN_CODE'] = []
+        packet['WARN_CODE'].append(val)
+        val = (x[76] - 48) * 100 + (x[77] - 48) * 10 + (x[78] - 48)
+        #print "Expected Checksum: %d" % (val)
+        packet['EXP_CHKSM'] = []
+        packet['EXP_CHKSM'].append(val)
+        #print "Calculated Checksum: %d" % chksum
+        packet['CALC_CHKSM'] = []
+        packet['CALC_CHKSM'].append(val)
+
+        print "The returned packet will be:"
+        print packet
+        return packet
+
+
     # from this point on we need verification that we have either usb interface or serial interface
     def read(self):
         x = []
