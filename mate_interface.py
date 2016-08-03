@@ -79,7 +79,8 @@ class Mate3:
         buf = usb.control.get_descriptor(self.dev, 255, usb.util.DESC_TYPE_STRING, self.dev.iSerialNumber)
         str = ""
         for i in range (0, len(buf)):
-            str += chr(buf[i])
+            if buf[i] < 58 and buf[i] > 47:
+                str += chr(buf[i])
         #print "Giving serial number:", str
         return str
 

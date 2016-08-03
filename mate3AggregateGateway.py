@@ -109,7 +109,7 @@ def msg_type(msg):
     return [0, 0]
 
 def on_message(mqttc, obj, msg):
-    try:
+    #try:
         global mate3
         print "MQTT MESSAGE RECEIVED"
         # If the received message is a node discover command, send an AT command.
@@ -121,6 +121,15 @@ def on_message(mqttc, obj, msg):
         SerNo = msg.topic.split("/")[4]
         print "Serial Number IS:" + SerNo
         print binascii.unhexlify(SerNo)
+        mate3.ser_close()
+        mate3.usb_init()
+        if mate3.get_serial_number() != SerNo:
+            print "Serial Numbers don't match"
+            return
+        else:
+            print "Serial Number match, issuing command"
+        mate3.usb_close()
+        mate3.ser_init()
         payload = msg.payload
 
         # If payload is not a properly formed command in hex,
@@ -154,7 +163,7 @@ def on_message(mqttc, obj, msg):
         else:
             print "invalid message type"
         time.sleep(1.1)
-    except:
+    #except:
         print "An error occurred in on_message"
 
 def Data():
