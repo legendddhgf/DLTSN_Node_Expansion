@@ -99,17 +99,17 @@ def rxData():
 
 # return list with:
 #0: 1 if query, 2 if command, 0 if invalid
-#1: index of next character
+#1: index of previous character
 def msg_type(msg):
     for i in range(0, len(msg)):
         if msg[i] == '?':
-            return [1, i + 1]
+            return [1, i - 1]
         if msg[i] == '=':
-            return [2, i + 1]
+            return [2, i - 1]
     return [0, 0]
 
 def on_message(mqttc, obj, msg):
-    #try:
+    try:
         global mate3
         print "MQTT MESSAGE RECEIVED"
         # If the received message is a node discover command, send an AT command.
@@ -120,7 +120,7 @@ def on_message(mqttc, obj, msg):
             #xbee.at(frame_id='1', command='ND')
         SerNo = msg.topic.split("/")[4]
         print "Serial Number IS:" + SerNo
-        print binascii.unhexlify(SerNo)
+        #print binascii.unhexlify(SerNo)
         mate3.ser_close()
         mate3.usb_init()
         if mate3.get_serial_number() != SerNo:
@@ -132,6 +132,7 @@ def on_message(mqttc, obj, msg):
         mate3.ser_init()
         payload = msg.payload
 
+        """
         # If payload is not a properly formed command in hex,
         # convert to hex and make sure the result is terminated with a carriage return. 
         if "\x0A" not in payload:
@@ -139,22 +140,33 @@ def on_message(mqttc, obj, msg):
             conv = payload.encode("hex") + "0A"
             payload = binascii.unhexlify(conv)
 
+        """
+
         print "DATA SENT IS:" + payload
         #payload = payload.split('\r')[0]
         
         msg_ti = msg_type(payload)
+        print "MSG_TI:", msg_ti
         val_index = payload[msg_ti[1]]
         # get the packet from mate and respond with the appropriate piece of info
         # TODO: figure out what kind of topic structures we need to send to
         if msg_ti[0] == 1:
             print "Attempting to get packet from mate"
             info = mate3.getPacket()
-            print "SWAGGER"
+            print "STUFF:", ord(val_index)
             if ord(val_index) < 58 and ord(val_index) > 47:
                 publishstr = ""
-                for i in range(0, val_index + 1): # including the index of the number
-                    publishstr += payload[i]
-                publishstr += info[payload.split(val_index)[0]][ord(val_index) - 48]
+                #for i in range(0, ord(val_index) - 48 + 1): # including the index of the number
+                    #publishstr += payload[i]
+                templist = info[payload.split(val_index)[0]] # get the list of items for the scenario
+                if templist is None:
+                    print "Invalid data request: %s" % payload.split(val_index[0])
+                    return
+                if ord(val_index) - 48 >= len(templist):
+                    print "Invalid index %c for %s" % (val_index, payload.split(val_index)[0])
+                    return
+                publishstr += payload.split(val_index)[0] + val_index + "="
+                publishstr += str(templist[ord(val_index) - 48])
                 publish.single("testbed/gateway/data/" + SerNo, publishstr)
                 print "Publishing: ", publishstr
                 print "SENT"
@@ -162,8 +174,8 @@ def on_message(mqttc, obj, msg):
             print "Not yet ready for commands"
         else:
             print "invalid message type"
-        time.sleep(1.1)
-    #except:
+        #sleep(1.1)
+    except:
         print "An error occurred in on_message"
 
 def Data():
