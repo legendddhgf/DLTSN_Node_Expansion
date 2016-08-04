@@ -255,6 +255,10 @@ def mate3_on_message(client,obj,msg):
     publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
     sendstr = 'WARN_CODE=1'
     publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'EXP_CHKSM=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
+    sendstr = 'CALC_CHKSM=1'
+    publish.single("testbed/nodeDiscover/data/mate3/" + str(SerNo), sendstr, hostname=BROKER_NAME)
     print "Mate3 node discovery complete"
     exit()
 

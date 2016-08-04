@@ -184,7 +184,7 @@ def Data():
     print "in Data"
     mqttc = mqtt.Client("mate3Gateway")
     mqttc.on_message = on_message
-    mqttc.connect(BROKER_NAME, 1883)
+    mqttc.connect(BROKER_NAME, 1883, 60)
     mqttc.subscribe("testbed/gateway/mqtt/mate3/#", 0)
     mqttc.loop_forever()
 
