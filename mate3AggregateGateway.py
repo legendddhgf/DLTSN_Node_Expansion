@@ -153,6 +153,9 @@ def on_message(mqttc, obj, msg):
         if msg_ti[0] == 1:
             print "Attempting to get packet from mate"
             info = mate3.getPacket()
+            if len(info) == 0:
+                print "Invalid packet recieved from mate3"
+                return
             print "STUFF:", ord(val_index)
             if ord(val_index) < 58 and ord(val_index) > 47:
                 publishstr = ""

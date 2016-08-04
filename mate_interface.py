@@ -19,7 +19,7 @@ class Mate3:
         if self.usb_open:
             print "Please close usb dev before initializing serial"
             return
-        self.ser = serial.Serial("/dev/outback", 19200, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE, None)
+        self.ser = serial.Serial("/dev/outback", 19200, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE, 1.05)
         print "Successfully opened /dev/outback self.serial"
         self.ser_open = True
 
@@ -91,6 +91,7 @@ class Mate3:
         sctime = 0.0 # time to get a single character
         iptime = 0.0 # time between beginning and end of packet
         bptime = 0.0 # time between end of packet and beginning of next
+        '''
         while (zero == 0):# infinite loop
             temp = '\0'
             if (sctime == 0):
@@ -102,6 +103,7 @@ class Mate3:
             if (ord(temp) == 13):
                 bptime = time.time() * (-1) # end of first packet
                 break # wait untill beginning of packet
+        '''
         while (zero == 0): # infinite loop
             x.append(self.ser.read())
             if (bptime < 0): # called after first byte is read
@@ -117,6 +119,9 @@ class Mate3:
             x[i] = ord(x[i])
         #print "Our packet is:\n"
         #print x
+
+        if len(x) != 80:
+            return {}
 
         packet = {}
     
@@ -339,6 +344,9 @@ class Mate3:
             x[i] = ord(x[i])
         print "Our packet is:\n"
         print x
+
+        if len(x) != 80:
+            return
     
         chksum = 0  
         desc = ""

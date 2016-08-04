@@ -88,7 +88,7 @@ def iterationThread():
         # For each mac address, publish to that mac address
         for i in iterList.keys():
             if i not in iterList:
-                break
+                continue
             if i.split(',')[0] == 'mate3':
                 print "publishing mate3 command: " + iterList[i] + " SERIAL NUMBER: " + i.split(',')[1]
                 publish.single("testbed/gateway/mqtt/mate3/" + i.split(',')[1], iterList[i], hostname=BROKER_NAME)
