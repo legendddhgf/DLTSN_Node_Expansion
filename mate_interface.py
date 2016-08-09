@@ -299,11 +299,11 @@ class Mate3:
         packet['WARN_CODE'].append(val)
         val = (x[76] - 48) * 100 + (x[77] - 48) * 10 + (x[78] - 48)
         #print "Expected Checksum: %d" % (val)
-        packet['EXP_CHKSM'] = []
-        packet['EXP_CHKSM'].append(val)
+        packet['VALID_CHKSM'] = []
+        packet['VALID_CHKSM'].append(int(val == chksum))
         #print "Calculated Checksum: %d" % chksum
-        packet['CALC_CHKSM'] = []
-        packet['CALC_CHKSM'].append(val)
+        #packet['CALC_CHKSM'] = []
+        #packet['CALC_CHKSM'].append(chksum)
 
         #print "The returned packet will be:"
         #print packet

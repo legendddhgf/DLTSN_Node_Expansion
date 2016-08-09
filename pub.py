@@ -21,9 +21,9 @@ s = "SWAGGER"
 
 #publish.single("testbed/nodeDiscover/command/mate3/", 'START', hostname=BROKER_NAME)
 
-#publish.single("testbed/iterationClient/mate3/0000581074", 'START BATT_VOLT0?')
+publish.single("testbed/iterationClient/mate3/0000581074", 'START READ?')
 
-publish.single("testbed/iterationClient/mate3/0000581074", 'START OUT_VOLT1?')
+publish.single("testbed/iterationClient/mate3/0000581074", 'STOP GRID_IN_VOLT1?')
 
 # publish.single("testbed/iterationClient/12345678", 'STOP L0?')
 
