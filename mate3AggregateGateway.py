@@ -111,6 +111,7 @@ def msg_type(msg):
 def on_message(mqttc, obj, msg):
     try:
         global mate3
+        global clearcount
         print "MQTT MESSAGE RECEIVED"
         # If the received message is a node discover command, send an AT command.
         # If not, it is a data message, and forward it to the xbee.
@@ -154,13 +155,24 @@ def on_message(mqttc, obj, msg):
             print "Attempting to get packet from mate"
             info = mate3.getPacket()
             if payload[:4] == "READ":
+                topic = "testbed/gateway/data/" + SerNo
+                publist = []
+                publishstr = ""
                 for key in info.keys():
                     for val in range(0, len(info[key])):
                         array = info[key]
                         publishstr = "%s%d=%s" % (key, val, array[val])
-                        publish.single("testbed/gateway/data/" + SerNo, publishstr)
-                        print "Publishing: ", publishstr
+                        print "Adding: ", "'", publishstr, "'"
+                        publish.single(topic, publishstr, hostname=BROKER_NAME)
                         sleep (0.01)
+                clearcount -= 1
+                if clearcount <= 0:
+                    clearcount = 5
+                    print "Attempting to clear buffer"
+                    publish.single(topic, None, 1, True, hostname=BROKER_NAME)
+                    sleep(1)
+                        #publist.append({"topic": topic, "payload": publishstr})
+                #publish.multiple(publist)
                 return
             if len(info) == 0:
                 print "Invalid packet recieved from mate3"
@@ -207,8 +219,10 @@ def Data():
 # rx side no unnecessary
 #try:
 global mate3
+global clearcount
 mate3 = Mate3()
 mate3.ser_init()
+clearcount = 5
 #Thread = threading.Thread(target=Data)
 #rxThread = threading.Thread(target=rxData)
 #rxThread.start()

@@ -26,6 +26,8 @@ while zero == 0:
         mate3.inv_cur()
     elif args[0] == "test2":
         mate3.info()
+    elif args[0] == "test3":
+        mate3.inv_off()
     elif len(args) > 1 and args[0] == "init" and args[1] == "usb":
         mate3.usb_init()
     elif len(args) > 1 and args[0] == "init" and args[1] == "ser":

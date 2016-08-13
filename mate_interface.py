@@ -280,13 +280,11 @@ class Mate3:
         #print "AC mode: %d: %s" % (val, desc)
         packet['AC_MODE'] = []
         packet['AC_MODE'].append(val)
-        decval = 0.0
-        decval = (x[64] - 48) * 100 + (x[65] - 48) * 10 + (x[66] - 48)
-        decval /= 10
+        val = (x[64] - 48) * 100 + (x[65] - 48) * 10 + (x[66] - 48)
         chksum += (x[64] - 48) + (x[65] - 48) + (x[66] - 48)
         #print "Battery voltage: %.1f [V]" % (decval)
         packet['BATT_VOLT'] = []
-        packet['BATT_VOLT'].append(decval * 10)
+        packet['BATT_VOLT'].append(val)
         val = (x[68] - 48) * 100 + (x[69] - 48) * 10 + (x[70] - 48)
         chksum += (x[68] - 48) + (x[69] - 48) + (x[70] - 48)
         #print "Miscellaneous: %d" % (val)

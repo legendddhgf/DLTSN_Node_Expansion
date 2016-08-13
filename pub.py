@@ -23,7 +23,7 @@ s = "SWAGGER"
 
 publish.single("testbed/iterationClient/mate3/0000581074", 'START READ?')
 
-publish.single("testbed/iterationClient/mate3/0000581074", 'STOP GRID_IN_VOLT1?')
+#publish.single("testbed/iterationClient/mate3/0000581074", 'STOP GRID_IN_VOLT1?')
 
 # publish.single("testbed/iterationClient/12345678", 'STOP L0?')
 

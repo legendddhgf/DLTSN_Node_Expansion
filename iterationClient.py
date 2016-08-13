@@ -92,10 +92,11 @@ def iterationThread():
             if i.split(',')[0] == 'mate3':
                 print "publishing mate3 command: " + iterList[i] + " SERIAL NUMBER: " + i.split(',')[1]
                 publish.single("testbed/gateway/mqtt/mate3/" + i.split(',')[1], iterList[i], hostname=BROKER_NAME)
+                time.sleep(2.1)
             else:
                 print "publishing: " + iterList[i] + " MAC ADDRESS: " + i.split(',')[0]
                 publish.single("testbed/gateway/mqtt/" + i.split(',')[0], iterList[i], hostname=BROKER_NAME)
-            time.sleep(1)
+                time.sleep(1)
 
 t1 = threading.Thread(target=mqttThread)
 t2 = threading.Thread(target=iterationThread)
