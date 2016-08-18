@@ -119,6 +119,10 @@ def on_message(mqttc, obj, msg):
         # the following is no longer applicable:
         #if msg.payload == "NODE_DISCOVER":
             #xbee.at(frame_id='1', command='ND')
+        device = msg.topic.split("/")[3]
+        if device != 'mate3':
+            #print "Invalid device %s" % device
+            return
         SerNo = msg.topic.split("/")[4]
         print "Serial Number IS:" + SerNo
         #print binascii.unhexlify(SerNo)
@@ -168,9 +172,9 @@ def on_message(mqttc, obj, msg):
                 clearcount -= 1
                 if clearcount <= 0:
                     clearcount = 5
-                    print "Attempting to clear buffer"
-                    publish.single(topic, None, 1, True, hostname=BROKER_NAME)
-                    sleep(1)
+                    #print "Attempting to clear buffer"
+                    #publish.single(topic, None, 1, True, hostname=BROKER_NAME)
+                    #sleep(1)
                         #publist.append({"topic": topic, "payload": publishstr})
                 #publish.multiple(publist)
                 return

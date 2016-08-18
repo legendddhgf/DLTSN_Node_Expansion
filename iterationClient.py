@@ -29,6 +29,8 @@ def on_message(mqttc, obj, msg):
     tempstr = msg.topic.split("/")[2]
     if tempstr == 'mate3':
         device = "Mate3"
+    if tempstr == 'midnite-classic':
+        device = "Midnite-Classic"
     if device == "Atmega2560":
         mac = msg.topic.split("/")[2]
         condition = msg.payload.split(" ")[0]   
@@ -69,6 +71,25 @@ def on_message(mqttc, obj, msg):
             print "stopping: mate command: " + argument
             if ('mate3,' + SerNo + ',' + argument) in nodeList:
                 del nodeList['mate3,' + SerNo + ',' + argument]
+    elif device == "Midnite-Classic":
+        mac = msg.topic.split("/")[3]
+        condition = msg.payload.split(" ")[0]
+        argument = msg.payload.split(" ")[1]
+
+        # If payload is not a properly formed command in hex,
+        # convert to hex and make sure the result is terminated with a carriage return. 
+        if "\x0A" not in argument:
+            conv = argument.encode("hex") + "0A"
+            argument = binascii.unhexlify(conv)
+
+        print "received serial number: " + mac
+        if condition == 'START':
+            print "starting midnite classic command: " + argument
+            nodeList['midnite-classic,' + mac + ',' + argument] = argument
+        else:
+            print "stopping: midnite classic command: " + argument
+            if ('midnite-classic,' + mac + ',' + argument) in nodeList:
+                del nodeList['midnite-classic,' + mac + ',' + argument]
     else:
         print "Invalid device error in iteration client"
         exit()
@@ -93,6 +114,10 @@ def iterationThread():
                 print "publishing mate3 command: " + iterList[i] + " SERIAL NUMBER: " + i.split(',')[1]
                 publish.single("testbed/gateway/mqtt/mate3/" + i.split(',')[1], iterList[i], hostname=BROKER_NAME)
                 time.sleep(2.1)
+            elif i.split(',')[0] == 'midnite-classic':
+                print "publishing midnite classic command: " + iterList[i] + " MAC ADDRESS: " + i.split(',')[1]
+                publish.single("testbed/gateway/mqtt/midnite-classic/" + i.split(',')[1], iterList[i], hostname=BROKER_NAME)
+                time.sleep(1.1)
             else:
                 print "publishing: " + iterList[i] + " MAC ADDRESS: " + i.split(',')[0]
                 publish.single("testbed/gateway/mqtt/" + i.split(',')[0], iterList[i], hostname=BROKER_NAME)
