@@ -72,7 +72,7 @@ def on_message(mqttc, obj, msg):
             if ('mate3,' + SerNo + ',' + argument) in nodeList:
                 del nodeList['mate3,' + SerNo + ',' + argument]
     elif device == "Midnite-Classic":
-        mac = msg.topic.split("/")[3]
+        SerNo = msg.topic.split("/")[3]
         condition = msg.payload.split(" ")[0]
         argument = msg.payload.split(" ")[1]
 
@@ -82,14 +82,14 @@ def on_message(mqttc, obj, msg):
             conv = argument.encode("hex") + "0A"
             argument = binascii.unhexlify(conv)
 
-        print "received serial number: " + mac
+        print "received serial number: " + SerNo
         if condition == 'START':
             print "starting midnite classic command: " + argument
-            nodeList['midnite-classic,' + mac + ',' + argument] = argument
+            nodeList['midnite-classic,' + SerNo + ',' + argument] = argument
         else:
             print "stopping: midnite classic command: " + argument
-            if ('midnite-classic,' + mac + ',' + argument) in nodeList:
-                del nodeList['midnite-classic,' + mac + ',' + argument]
+            if ('midnite-classic,' + SerNo + ',' + argument) in nodeList:
+                del nodeList['midnite-classic,' + SerNo + ',' + argument]
     else:
         print "Invalid device error in iteration client"
         exit()

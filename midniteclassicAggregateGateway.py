@@ -11,7 +11,7 @@ import paho.mqtt.publish as publish
 import threading
 from multiprocessing import Process
 import binascii
-from mate_interface import Mate3
+from classic import MidniteClassicUSB
 # -----------------------------------------------------------------------------
 # Config Settings
 BROKER_NAME = "127.0.0.1"
@@ -110,7 +110,7 @@ def msg_type(msg):
 
 def on_message(mqttc, obj, msg):
     try:
-        global mate3
+        global midnite
         global clearcount
         print "MQTT MESSAGE RECEIVED"
         # If the received message is a node discover command, send an AT command.
@@ -120,21 +120,17 @@ def on_message(mqttc, obj, msg):
         #if msg.payload == "NODE_DISCOVER":
             #xbee.at(frame_id='1', command='ND')
         device = msg.topic.split("/")[3]
-        if device != 'mate3':
+        if device != 'midnite-classic':
             #print "Invalid device %s" % device
             return
         SerNo = msg.topic.split("/")[4]
         print "Serial Number IS:" + SerNo
         #print binascii.unhexlify(SerNo)
-        mate3.ser_close()
-        mate3.usb_init()
-        if mate3.get_serial_number() != SerNo:
+        if midnite.serial_number != SerNo:
             print "Serial Numbers don't match"
             return
         else:
             print "Serial Number match, issuing command"
-        mate3.usb_close()
-        mate3.ser_init()
         payload = msg.payload
 
         """
@@ -156,16 +152,20 @@ def on_message(mqttc, obj, msg):
         # get the packet from mate and respond with the appropriate piece of info
         # TODO: figure out what kind of topic structures we need to send to
         if msg_ti[0] == 1:
-            print "Attempting to get packet from mate"
-            info = mate3.getPacket()
+            print "Attempting to get packet from midnite"
+            #info = midnite._parse_usb_data_line(midnite.read_one_line)
+            info = midnite.read_one_line()
+            #print "Packet:\n", info
+            if len(info) == 0:
+                print "Invalid packet recieved from midnite classic"
+                return
             if payload[:4] == "READ":
                 topic = "testbed/gateway/data/" + SerNo
                 publist = []
                 publishstr = ""
                 for key in info.keys():
-                    for val in range(0, len(info[key])):
-                        array = info[key]
-                        publishstr = "%s%d=%s" % (key, val, array[val])
+                    for val in range(0, 1): # there is only index 0 right now
+                        publishstr = "%s%d=%s" % (key, val, info[key]) # be careful (this id different from mate interface)
                         print "Adding: ", "'", publishstr, "'"
                         publish.single(topic, publishstr, hostname=BROKER_NAME)
                         sleep (0.01)
@@ -178,15 +178,14 @@ def on_message(mqttc, obj, msg):
                         #publist.append({"topic": topic, "payload": publishstr})
                 #publish.multiple(publist)
                 return
-            if len(info) == 0:
-                print "Invalid packet recieved from mate3"
-                return
             #print "STUFF:", ord(val_index)
-            if ord(val_index) < 58 and ord(val_index) > 47:
+            if ord(val_index) < 58 and ord(val_index) > 47 \
+                                   and val_index == '0': # the result of only having one item in every sensor type
                 publishstr = ""
                 #for i in range(0, ord(val_index) - 48 + 1): # including the index of the number
                     #publishstr += payload[i]
-                templist = info[payload.split(val_index)[0]] # get the list of items for the scenario
+                templist = [] # because every index isn't a list, I want to avoid modifying a lot of code
+                templist.append(info[payload.split(val_index)[0]]) # get the list of items for the scenario
                 if templist is None:
                     print "Invalid data request: %s" % payload.split(val_index[0])
                     return
@@ -210,10 +209,10 @@ def Data():
     # for specific client:
     # mqttc = mqtt.Client("client-id")
     print "in Data"
-    mqttc = mqtt.Client("mate3Gateway")
+    mqttc = mqtt.Client("midniteclassicGateway")
     mqttc.on_message = on_message
     mqttc.connect(BROKER_NAME, 1883, 60)
-    mqttc.subscribe("testbed/gateway/mqtt/mate3/#", 0)
+    mqttc.subscribe("testbed/gateway/mqtt/midnite-classic/#", 0)
     mqttc.loop_forever()
 
 # 2 threads:
@@ -222,10 +221,10 @@ def Data():
 
 # rx side no unnecessary
 #try:
-global mate3
+global midnite
 global clearcount
-mate3 = Mate3()
-mate3.ser_init()
+midnite = MidniteClassicUSB(port="/dev/midnite")
+midnite.usb_init(idVendor=0xFFFF, idProduct=0x0005)
 clearcount = 5
 #Thread = threading.Thread(target=Data)
 #rxThread = threading.Thread(target=rxData)
