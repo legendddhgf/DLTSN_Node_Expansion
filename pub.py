@@ -17,13 +17,13 @@ hexstring = "0013a20040a57a9c"
 
 s = "SWAGGER"
 
-#publish.single("testbed/outback/mate3/0/summary", s, hostname=BROKER_NAME)
+publish.single("testbed/gateway/data/DEADC0DE", "Battery_volts_av0=14.0")
 
 #publish.single("testbed/nodeDiscover/command/mate3/", 'START', hostname=BROKER_NAME)
 
-publish.single("testbed/iterationClient/mate3/0000581074", 'START READ?')
+#publish.single("testbed/iterationClient/mate3/0000581074", 'START READ?')
 
-time.sleep(4)
+#time.sleep(4)
 
 #publish.single("testbed/iterationClient/mate3/0000581074", 'STOP READ?')
 """

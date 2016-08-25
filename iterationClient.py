@@ -115,7 +115,7 @@ def iterationThread():
                 publish.single("testbed/gateway/mqtt/mate3/" + i.split(',')[1], iterList[i], hostname=BROKER_NAME)
                 time.sleep(2.1)
             elif i.split(',')[0] == 'midnite-classic':
-                print "publishing midnite classic command: " + iterList[i] + " MAC ADDRESS: " + i.split(',')[1]
+                print "publishing midnite classic command: " + iterList[i] + " SERIAL NUMBER: " + i.split(',')[1]
                 publish.single("testbed/gateway/mqtt/midnite-classic/" + i.split(',')[1], iterList[i], hostname=BROKER_NAME)
                 time.sleep(1.1)
             else:
